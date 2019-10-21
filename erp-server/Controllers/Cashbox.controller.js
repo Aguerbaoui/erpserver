@@ -1,0 +1,141 @@
+const Cashbox= require('../models/Cashbox.model.js');
+
+//Create new Product
+exports.create = (req, res) => {
+    // Request validation
+    if(!req.body) {
+        return res.status(400).send({
+            message: "Product content can not be empty"
+        });
+    }
+
+    // Create a Product
+    const cashbox = new Cashbox(req.body);
+
+    // Save Product in the database
+    cashbox.save()
+    .then(data => {
+        res.send(data);
+    }).catch(err => {
+        res.status(500).send({
+            message: err.message || "Something wrong while creating the company."
+        });
+    });
+};
+
+// Retrieve all products from the database.
+exports.getAll = (req, res) => {
+    Cashbox.find()
+    .populate('BranchId')
+    .populate('CashierId')
+    .populate('JournalId')
+    .populate('LinkingAccountsId')
+    .populate('CurrencyId')
+    .then(cashboxs => {
+        res.send(cashboxs);
+    }).catch(err => {
+        res.status(500).send({
+            message: err.message || "Something wrong while retrieving    branchs."
+        });
+    });
+};
+
+// Find a single product with a productId
+exports.findOne = (req, res) => {
+    Cashbox.findById(req.params.cashboxId)
+    .then(cashbox => {
+        if(!cashbox) {
+            return res.status(404).send({
+                message: "Product not found with id " 
+            });            
+        }
+        res.send(cashbox);
+    }).catch(err => {
+        if(err.kind === 'ObjectId') {
+            return res.status(404).send({
+                message: "Product not found with id " 
+            });                
+        }
+        return res.status(500).send({
+            message: "Something wrong retrieving product with id " 
+        });
+    });
+};
+
+// Update a product
+exports.update = (req, res) => {
+    // Validate Request
+    if(!req.body) {
+        return res.status(400).send({
+            message: "Product content can not be empty"
+        });
+    }
+
+    // Find and update product with the request body
+    Cashbox.findByIdAndUpdate(req.body._id, req.body, {new: true})
+    .then(cashbox=> {
+        if(!cashbox) {
+            return res.status(404).send({
+                message: "company not found with id " 
+            });
+        }
+        res.send(cashbox);
+    }).catch(err => {
+        if(err.kind === 'ObjectId') {
+            return res.status(404).send({
+                message: "Company not found with id " 
+            });                
+        }
+        return res.status(500).send({
+            message: "Something wrong updating note with id "
+        });
+    });
+};
+
+
+exports.remove = (req, res)=>{
+    Cashbox.delete({
+        _id: req.params._id
+    })
+        .then(paper => {
+            return res.status(200).end()
+        }).catch(err => {
+
+            if (err.kind === 'ObjectId') {
+                return res.status(404).send({
+                    message: "Company not found with id "
+                });
+            }
+            return res.status(500).send({
+                message: "Something wrong updating note with id "
+            });
+        })
+ 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+exports.getStopedCashBoxes=(req,res)=>{
+    Cashbox.find({ StopedCashbox: { $ne: false} })
+    .then(users => {
+        res.send(users);
+    }).catch(err => {
+        res.status(500).send({
+            message: err.message || "Something wrong while retrieving    companys."
+        });
+    });
+}
